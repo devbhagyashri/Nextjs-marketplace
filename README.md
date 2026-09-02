@@ -1,47 +1,120 @@
-# Marketplace Web App  
+# Company Marketplace
 
-A **Next.js** marketplace where users can browse, sell companies, and view interested buyers. **Google OAuth authentication via Supabase** ensures secure access.
+A Next.js marketplace where users can browse companies for sale, list their own, and express buyer interest.
 
-## 🚀 Features  
-- **Google OAuth** authentication (Supabase)  
-- **Protected routes** for selling and buyer interest  
-- **Dynamic Navbar** with active link highlighting  
-- **Server-side & client-side rendering** for performance  
+Sign-in is handled with **Google OAuth** through **Supabase**. Listings, images, and interest records are stored in Supabase Postgres and Storage.
 
-## 📌 Setup  
+## Features
 
-### 1️⃣ Prerequisites  
-- **Node.js v18+**  
-- **Yarn or npm**  
-- **Supabase account**  
+- Google sign-in with protected seller pages
+- Browse listings with search, industry, and price filters
+- Company detail pages
+- Create a listing with validation and optional image upload
+- Express interest (not on your own listing, no duplicates)
+- Manage your listings and view interested buyers
+- Loading, empty, and error states
 
-### 2️⃣ Install & Run  
-- git clone https://github.com/DevGit21/Nextjs-marketplace.git
-- cd marketplace-app
-- yarn install  # or npm install
+## Tech stack
 
-### 3️⃣ Configure Supabase
-- Create a .env.local file:
-- NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-- NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+- Next.js 15 (App Router), React 19, TypeScript
+- Tailwind CSS and shadcn/ui
+- Supabase Auth, Postgres, and Storage
+- Zod for listing validation
 
-### 4️⃣ Start the Server
-- yarn dev  # or npm run dev
-- Visit http://localhost:3000.
+## Getting started
 
-🔑 Authentication & Access Control
-- Protected pages: /sell & /seller/interests
-- Redirects guests to homepage
-- Sign in/out via Google
+### Requirements
 
-📂 Folder Structure
+- Node.js 18.18 or later
+- A [Supabase](https://supabase.com) project
+- A Google Cloud OAuth client (Web)
+
+### 1. Install
+
 ```bash
-📦 nextjs-marketplace-app
- ┣ 📂 components   # Reusable UI (Navbar, Buttons)
- ┣ 📂 pages        # Marketplace, Sell, Interests
- ┣ 📂 supabase     # Supabase client config
- ┣ 📜 .env.local   # API keys (ignored in Git)
- ┣ 📜 package.json # Dependencies
- ┣ 📜 README.md    # Documentation
+npm install
+```
 
- 🚀 **Happy Coding!** 🎉
+### 2. Environment variables
+
+Copy `.env.example` to `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+Fill in your Supabase values from **Project Settings → API**:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-or-publishable-key
+```
+
+Do not commit `.env.local`.
+
+### 3. Database and storage
+
+In the Supabase **SQL Editor**, run [`supabase/schema.sql`](supabase/schema.sql).
+
+This creates:
+
+- `companies` and `company_interests` tables
+- Row Level Security policies
+- A public `company-images` storage bucket
+
+### 4. Google authentication
+
+1. In Supabase, open **Authentication → Providers → Google** and enable it.
+2. In [Google Cloud Console](https://console.cloud.google.com/auth/clients), create a **Web application** OAuth client.
+3. Add:
+   - Authorized JavaScript origin: `http://localhost:3000`
+   - Authorized redirect URI: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
+4. Paste the Client ID and Client Secret into the Supabase Google provider and save.
+5. In **Authentication → URL Configuration**, set:
+   - Site URL: `http://localhost:3000`
+   - Redirect URLs: `http://localhost:3000/**` and `http://localhost:3000/auth/callback`
+
+### 5. Run the app
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+```bash
+npm run build
+npm start
+```
+
+## Routes
+
+| Path | Description |
+| --- | --- |
+| `/` | Marketplace browse and filters |
+| `/companies/[id]` | Company detail and interest |
+| `/sell` | Create a listing (signed in) |
+| `/my-listings` | Edit/delete your listings (signed in) |
+| `/seller/interests` | Buyers interested in your companies (signed in) |
+| `/auth/callback` | Google OAuth callback |
+
+## Project structure
+
+```text
+app/                  App Router pages, layout, and auth callback
+components/           UI and feature components
+lib/supabase/         Browser, server, and middleware clients
+lib/data.ts           Server-side data fetching
+middleware.ts         Session refresh and route protection
+supabase/schema.sql   Database, RLS, and storage setup
+```
+
+## Troubleshooting
+
+| Issue | What to check |
+| --- | --- |
+| `Unsupported provider: provider is not enabled` | Google is not enabled on **this** Supabase project |
+| `redirect_uri_mismatch` | Google redirect URI must match `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback` |
+| Image upload RLS error | Re-run `supabase/schema.sql` so the storage policies exist |
+| Listings fail to load | Confirm `.env.local` is set and `schema.sql` has been run |
+| Sign-in returns to a blank error | Add `http://localhost:3000/auth/callback` to Supabase redirect URLs |
